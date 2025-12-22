@@ -11,12 +11,13 @@
             const { buttons, imageBtn, askInput, askModelSelect } = elements;
 
             // --- Toolbar Buttons ---
-            this._add(buttons.copySelection, 'mousedown', (e) => this.controller.triggerAction(e, 'copy_selection'));
-            this._add(buttons.ask, 'mousedown', (e) => this.controller.triggerAction(e, 'ask'));
-            this._add(buttons.grammar, 'mousedown', (e) => this.controller.triggerAction(e, 'grammar'));
-            this._add(buttons.translate, 'mousedown', (e) => this.controller.triggerAction(e, 'translate'));
-            this._add(buttons.explain, 'mousedown', (e) => this.controller.triggerAction(e, 'explain'));
-            this._add(buttons.summarize, 'mousedown', (e) => this.controller.triggerAction(e, 'summarize'));
+            // Use .actions property to access delegate
+            this._add(buttons.copySelection, 'mousedown', (e) => this.controller.actions.triggerAction(e, 'copy_selection'));
+            this._add(buttons.ask, 'mousedown', (e) => this.controller.actions.triggerAction(e, 'ask'));
+            this._add(buttons.grammar, 'mousedown', (e) => this.controller.actions.triggerAction(e, 'grammar'));
+            this._add(buttons.translate, 'mousedown', (e) => this.controller.actions.triggerAction(e, 'translate'));
+            this._add(buttons.explain, 'mousedown', (e) => this.controller.actions.triggerAction(e, 'explain'));
+            this._add(buttons.summarize, 'mousedown', (e) => this.controller.actions.triggerAction(e, 'summarize'));
 
             // --- Image Button ---
             this._add(imageBtn, 'click', (e) => {
@@ -30,19 +31,19 @@
             if (buttons.imageChat) {
                 this._add(buttons.imageChat, 'click', (e) => {
                     e.preventDefault(); e.stopPropagation();
-                    this.controller.triggerAction(e, 'image_chat');
+                    this.controller.actions.triggerAction(e, 'image_chat');
                 });
             }
             if (buttons.imageDescribe) {
                 this._add(buttons.imageDescribe, 'click', (e) => {
                     e.preventDefault(); e.stopPropagation();
-                    this.controller.triggerAction(e, 'image_describe');
+                    this.controller.actions.triggerAction(e, 'image_describe');
                 });
             }
             if (buttons.imageExtract) {
                 this._add(buttons.imageExtract, 'click', (e) => {
                     e.preventDefault(); e.stopPropagation();
-                    this.controller.triggerAction(e, 'image_extract');
+                    this.controller.actions.triggerAction(e, 'image_extract');
                 });
             }
             
@@ -50,47 +51,62 @@
             if (buttons.imageRemoveBg) {
                 this._add(buttons.imageRemoveBg, 'click', (e) => {
                     e.preventDefault(); e.stopPropagation();
-                    this.controller.triggerAction(e, 'image_remove_bg');
+                    this.controller.actions.triggerAction(e, 'image_remove_bg');
                 });
             }
             if (buttons.imageRemoveText) {
                 this._add(buttons.imageRemoveText, 'click', (e) => {
                     e.preventDefault(); e.stopPropagation();
-                    this.controller.triggerAction(e, 'image_remove_text');
+                    this.controller.actions.triggerAction(e, 'image_remove_text');
                 });
             }
             if (buttons.imageUpscale) {
                 this._add(buttons.imageUpscale, 'click', (e) => {
                     e.preventDefault(); e.stopPropagation();
-                    this.controller.triggerAction(e, 'image_upscale');
+                    this.controller.actions.triggerAction(e, 'image_upscale');
+                });
+            }
+            if (buttons.imageExpand) {
+                this._add(buttons.imageExpand, 'click', (e) => {
+                    e.preventDefault(); e.stopPropagation();
+                    this.controller.actions.triggerAction(e, 'image_expand');
                 });
             }
 
             // --- Window Actions ---
-            this._add(buttons.headerClose, 'click', (e) => this.controller.cancelAsk(e));
-            this._add(buttons.stop, 'click', (e) => this.controller.stopAsk(e));
+            this._add(buttons.headerClose, 'click', (e) => this.controller.actions.cancelAsk(e));
+            this._add(buttons.stop, 'click', (e) => this.controller.actions.stopAsk(e));
 
             if (buttons.continue) {
-                this._add(buttons.continue, 'click', (e) => this.controller.continueChat(e));
+                this._add(buttons.continue, 'click', (e) => this.controller.actions.continueChat(e));
             }
             if (buttons.copy) {
-                this._add(buttons.copy, 'click', (e) => this.controller.copyResult(e));
+                this._add(buttons.copy, 'click', (e) => this.controller.actions.copyResult(e));
             }
             if (buttons.retry) {
-                this._add(buttons.retry, 'click', (e) => this.controller.retryAsk(e));
+                this._add(buttons.retry, 'click', (e) => this.controller.actions.retryAsk(e));
             }
             if (buttons.insert) {
-                this._add(buttons.insert, 'click', (e) => this.controller.insertResult(e));
+                this._add(buttons.insert, 'click', (e) => this.controller.actions.insertResult(e));
             }
             if (buttons.replace) {
-                this._add(buttons.replace, 'click', (e) => this.controller.replaceResult(e));
+                this._add(buttons.replace, 'click', (e) => this.controller.actions.replaceResult(e));
+            }
+
+            // --- Browser Control (UI Toggle) ---
+            const browserControlBtn = askWindow ? askWindow.querySelector('#browser-control-btn') : null;
+            if (browserControlBtn) {
+                this._add(browserControlBtn, 'click', (e) => {
+                    e.preventDefault(); e.stopPropagation();
+                    browserControlBtn.classList.toggle('active');
+                });
             }
 
             // --- Input ---
             this._add(askInput, 'keydown', (e) => {
                 if (e.key === 'Enter') {
                     e.preventDefault();
-                    this.controller.submitAsk(e);
+                    this.controller.actions.submitAsk(e);
                 }
                 e.stopPropagation();
             });
@@ -108,8 +124,9 @@
             }
             
             // Code Copy Delegation inside Result Area
+            // Use .codeCopy property to access handler
             if (elements.resultText) {
-                this._add(elements.resultText, 'click', (e) => this.controller.handleCodeCopy(e));
+                this._add(elements.resultText, 'click', (e) => this.controller.codeCopy.handle(e));
             }
 
             this._initResizeObserver(askWindow);

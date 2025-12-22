@@ -1,21 +1,23 @@
 
 // background/index.js
-import { GeminiSessionManager } from './session.js';
-import { ImageHandler } from './image.js';
+import { GeminiSessionManager } from './managers/session_manager.js';
+import { ImageManager } from './managers/image_manager.js';
+import { BrowserControlManager } from './managers/control_manager.js';
 import { setupContextMenus } from './menus.js';
 import { setupMessageListener } from './messages.js';
-import { keepAliveManager } from '../services/keep_alive.js';
+import { keepAliveManager } from './managers/keep_alive.js';
 
 // Setup Sidepanel
 chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
 
 // Initialize Managers
 const sessionManager = new GeminiSessionManager();
-const imageHandler = new ImageHandler();
+const imageManager = new ImageManager();
+const controlManager = new BrowserControlManager();
 
 // Initialize Modules
-setupContextMenus(imageHandler);
-setupMessageListener(sessionManager, imageHandler);
+setupContextMenus(imageManager);
+setupMessageListener(sessionManager, imageManager, controlManager);
 
 // Initialize Advanced Keep-Alive (Cookie Rotation)
 keepAliveManager.init();

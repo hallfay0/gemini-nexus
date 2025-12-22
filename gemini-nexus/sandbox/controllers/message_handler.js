@@ -1,9 +1,9 @@
 
-// sandbox/message_handler.js
-import { appendMessage } from './render/message.js';
-import { cropImage } from '../lib/crop_utils.js';
-import { t } from './core/i18n.js';
-import { WatermarkRemover } from '../lib/watermark_remover.js';
+// sandbox/controllers/message_handler.js
+import { appendMessage } from '../render/message.js';
+import { cropImage } from '../../lib/crop_utils.js';
+import { t } from '../core/i18n.js';
+import { WatermarkRemover } from '../../lib/watermark_remover.js';
 
 export class MessageHandler {
     constructor(sessionManager, uiController, imageManager, appController) {

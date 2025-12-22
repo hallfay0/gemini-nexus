@@ -1,6 +1,7 @@
-// background/image.js
 
-export class ImageHandler {
+// background/managers/image_manager.js
+
+export class ImageManager {
     
     // Fetch image from a URL or Data URI
     async fetchImage(url) {

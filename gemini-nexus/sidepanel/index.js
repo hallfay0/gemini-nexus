@@ -11,7 +11,7 @@ const cachedTheme = localStorage.getItem('geminiTheme') || 'system';
 const cachedLang = localStorage.getItem('geminiLanguage') || 'system';
 
 // Set src immediately to start loading HTML (Parallel with storage fetch)
-iframe.src = `../sandbox.html?theme=${cachedTheme}&lang=${cachedLang}`;
+iframe.src = `../sandbox/index.html?theme=${cachedTheme}&lang=${cachedLang}`;
 
 
 // --- Optimization: 2. Async Data Fetch ---
@@ -24,7 +24,11 @@ chrome.storage.local.get([
     'pendingSessionId', 
     'geminiShortcuts',
     'geminiModel',
-    'pendingImage'
+    'pendingImage',
+    'geminiSidebarBehavior', // New preference
+    'geminiTextSelectionEnabled',
+    'geminiImageToolsEnabled',
+    'geminiAccountIndices' // New preference
 ], (result) => {
     preFetchedData = result;
     trySendInitData();
@@ -43,6 +47,13 @@ function trySendInitData() {
     
     // 2. Push Data (if ready)
     if (preFetchedData) {
+        
+        // Push Sidebar Behavior (Must be sent before RESTORE_SESSIONS to ensure logic applies correctly)
+        win.postMessage({
+            action: 'RESTORE_SIDEBAR_BEHAVIOR',
+            payload: preFetchedData.geminiSidebarBehavior || 'auto'
+        }, '*');
+
         // Push Sessions
         win.postMessage({
             action: 'RESTORE_SESSIONS',
@@ -59,6 +70,24 @@ function trySendInitData() {
         win.postMessage({
             action: 'RESTORE_MODEL',
             payload: preFetchedData.geminiModel || 'gemini-2.5-flash'
+        }, '*');
+        
+        // Push Text Selection State
+        win.postMessage({
+            action: 'RESTORE_TEXT_SELECTION',
+            payload: preFetchedData.geminiTextSelectionEnabled !== false
+        }, '*');
+
+        // Push Image Tools State
+        win.postMessage({
+            action: 'RESTORE_IMAGE_TOOLS',
+            payload: preFetchedData.geminiImageToolsEnabled !== false
+        }, '*');
+
+        // Push Account Indices
+        win.postMessage({
+            action: 'RESTORE_ACCOUNT_INDICES',
+            payload: preFetchedData.geminiAccountIndices || "0"
         }, '*');
 
         // Handle Pending Session Switch
@@ -183,6 +212,30 @@ window.addEventListener('message', (event) => {
         });
     }
 
+    if (action === 'GET_IMAGE_TOOLS') {
+        chrome.storage.local.get(['geminiImageToolsEnabled'], (res) => {
+            const enabled = res.geminiImageToolsEnabled !== false; // Default true
+            if (iframe.contentWindow) {
+                iframe.contentWindow.postMessage({
+                    action: 'RESTORE_IMAGE_TOOLS',
+                    payload: enabled
+                }, '*');
+            }
+        });
+    }
+
+    if (action === 'GET_ACCOUNT_INDICES') {
+        chrome.storage.local.get(['geminiAccountIndices'], (res) => {
+            const indices = res.geminiAccountIndices || "0";
+            if (iframe.contentWindow) {
+                iframe.contentWindow.postMessage({
+                    action: 'RESTORE_ACCOUNT_INDICES',
+                    payload: indices
+                }, '*');
+            }
+        });
+    }
+
     // --- Sync Storage Updates back to Local Cache (For Speed next time) ---
     
     if (action === 'SAVE_SESSIONS') {
@@ -207,6 +260,19 @@ window.addEventListener('message', (event) => {
     }
     if (action === 'SAVE_TEXT_SELECTION') {
         chrome.storage.local.set({ geminiTextSelectionEnabled: payload });
+        if(preFetchedData) preFetchedData.geminiTextSelectionEnabled = payload;
+    }
+    if (action === 'SAVE_IMAGE_TOOLS') {
+        chrome.storage.local.set({ geminiImageToolsEnabled: payload });
+        if(preFetchedData) preFetchedData.geminiImageToolsEnabled = payload;
+    }
+    if (action === 'SAVE_SIDEBAR_BEHAVIOR') {
+        chrome.storage.local.set({ geminiSidebarBehavior: payload });
+        if(preFetchedData) preFetchedData.geminiSidebarBehavior = payload;
+    }
+    if (action === 'SAVE_ACCOUNT_INDICES') {
+        chrome.storage.local.set({ geminiAccountIndices: payload });
+        if(preFetchedData) preFetchedData.geminiAccountIndices = payload;
     }
 });
 

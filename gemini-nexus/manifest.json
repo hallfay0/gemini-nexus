@@ -2,8 +2,8 @@
 {
   "manifest_version": 3,
   "name": "Gemini Nexus",
-  "version": "3.1.0",
-  "permissions": ["sidePanel", "storage", "contextMenus", "scripting", "alarms"],
+  "version": "4.0.0",
+  "permissions": ["sidePanel", "storage", "contextMenus", "scripting", "alarms", "debugger"],
   "host_permissions": [
     "https://gemini.google.com/*",
     "<all_urls>"
@@ -25,17 +25,17 @@
   "commands": {
     "_execute_action": {
       "suggested_key": {
-        "default": "Ctrl+Shift+P",
-        "mac": "Command+Shift+P"
+        "default": "Alt+S",
+        "mac": "Alt+S"
       },
-      "description": "Open Gemini Nexus"
+      "description": "Open Gemini Nexus Sidebar"
     }
   },
   "side_panel": {
     "default_path": "sidepanel/index.html"
   },
   "sandbox": {
-    "pages": ["sandbox.html"]
+    "pages": ["sandbox/index.html"]
   },
   "content_scripts": [
     {
@@ -52,8 +52,9 @@
         "content/toolbar/styles/panel/index.js",
         "content/toolbar/styles/markdown.js",
         "content/toolbar/styles/index.js",
-        "content/toolbar/markdown/bridge.js",
-        "content/toolbar/drag.js",
+        "content/toolbar/bridge.js",
+        "content/toolbar/utils/drag.js",
+        "content/toolbar/i18n.js",
         "content/toolbar/templates.js",
         "content/toolbar/view/utils.js",
         "content/toolbar/view/widget.js",
@@ -64,15 +65,15 @@
         "content/toolbar/ui/grammar.js",
         "content/toolbar/ui/renderer.js",
         "content/toolbar/ui/actions_delegate.js",
+        "content/toolbar/ui/code_copy.js",
         "content/toolbar/ui/manager.js", 
         "content/toolbar/actions.js",
         "content/toolbar/image.js",
         "content/toolbar/stream.js", 
-        "content/toolbar/input.js",
-        "content/toolbar/selection.js",
+        "content/toolbar/utils/input.js",
+        "content/selection.js",
         "content/toolbar/dispatch.js",
         "content/toolbar/crop.js",
-        "content/toolbar/watermark.js",
         "content/toolbar/controller.js",
         "content/index.js"
       ],
@@ -81,7 +82,7 @@
   ],
   "web_accessible_resources": [
     {
-      "resources": ["logo.png", "sandbox.html"],
+      "resources": ["logo.png", "sandbox/index.html"],
       "matches": ["<all_urls>"]
     }
   ],

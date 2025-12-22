@@ -1,5 +1,5 @@
 
-// content/toolbar/input.js
+// content/toolbar/utils/input.js
 (function() {
     class InputManager {
         constructor() {

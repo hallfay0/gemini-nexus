@@ -1,3 +1,4 @@
+
 // sandbox/boot/app.js
 import { renderLayout } from '../ui/layout.js';
 import { applyTranslations } from '../core/i18n.js';
@@ -36,8 +37,8 @@ export function initAppMode() {
         ] = await Promise.all([
             import('../core/image_manager.js'),
             import('../core/session_manager.js'),
-            import('../ui/controller.js'),
-            import('../app_controller.js')
+            import('../ui/ui_controller.js'),
+            import('../controllers/app_controller.js')
         ]);
 
         // Init Managers

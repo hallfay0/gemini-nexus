@@ -22,11 +22,12 @@ const MODEL_CONFIGS = {
 export async function sendGeminiMessage(prompt, context, model, files, signal, onUpdate) {
     // 1. Ensure Auth
     if (!context || !context.atValue) {
-        const params = await fetchRequestParams();
+        // Fallback: If no context, use '0' (this path usually handled by SessionManager)
+        const params = await fetchRequestParams('0');
         context = {
             atValue: params.atValue,
             blValue: params.blValue,
-            authUser: params.authUserIndex || '0', // Google Internal Header Method: User Index
+            authUser: params.authUserIndex || '0', 
             contextIds: ['', '', ''] 
         };
     }
@@ -93,9 +94,10 @@ export async function sendGeminiMessage(prompt, context, model, files, signal, o
     };
 
     // 5. Send Request
-    const response = await fetch(
-        `https://gemini.google.com/_/BardChatUi/data/assistant.lamda.BardFrontendService/StreamGenerate?${queryParams.toString()}`, 
-        {
+    // IMPORTANT: Include /u/{index}/ in URL to ensure cookies match the requested authUser
+    const endpoint = `https://gemini.google.com/u/${context.authUser}/_/BardChatUi/data/assistant.lamda.BardFrontendService/StreamGenerate?${queryParams.toString()}`;
+
+    const response = await fetch(endpoint, {
             method: 'POST',
             signal: signal, 
             headers: headers,

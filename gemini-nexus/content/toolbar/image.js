@@ -1,3 +1,4 @@
+
 // content/toolbar/image.js
 
 (function() {
@@ -6,17 +7,35 @@
             this.callbacks = callbacks || {}; // { onShow, onHide }
             this.hoveredImage = null;
             this.imageButtonTimeout = null;
+            this.isEnabled = false;
             
             // Bind method for event listeners
             this.onImageHover = this.onImageHover.bind(this);
         }
 
         init() {
-            document.addEventListener('mouseover', (e) => this.onImageHover(e, true), true);
-            document.addEventListener('mouseout', (e) => this.onImageHover(e, false), true);
+            // Default to enabled, but actual state set via setEnabled
+            // Event listeners are only active when enabled
         }
 
-        onImageHover(e, isEnter) {
+        setEnabled(enabled) {
+            if (this.isEnabled === enabled) return;
+            this.isEnabled = enabled;
+
+            if (enabled) {
+                document.addEventListener('mouseover', this.onImageHover, true);
+                document.addEventListener('mouseout', this.onImageHover, true);
+            } else {
+                document.removeEventListener('mouseover', this.onImageHover, true);
+                document.removeEventListener('mouseout', this.onImageHover, true);
+                this.scheduleHide(0); // Hide immediately
+            }
+        }
+
+        onImageHover(e) {
+            if (!this.isEnabled) return;
+            const isEnter = e.type === 'mouseover';
+
             if (e.target.tagName !== 'IMG') return;
 
             // Ignore small images (icons, spacers)
@@ -36,14 +55,14 @@
             }
         }
 
-        scheduleHide() {
+        scheduleHide(delay = 200) {
             if (this.imageButtonTimeout) clearTimeout(this.imageButtonTimeout);
             this.imageButtonTimeout = setTimeout(() => {
                 if (this.callbacks.onHide) {
                     this.callbacks.onHide();
                 }
                 this.hoveredImage = null;
-            }, 200); // 200ms delay to allow moving to button
+            }, delay); 
         }
 
         cancelHide() {

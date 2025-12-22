@@ -1,6 +1,5 @@
-
-// content.js v3.1.0 -> content/index.js
-console.log("%c Gemini Nexus v3.1.0 Ready ", "background: #333; color: #00ff00; font-size: 16px");
+// content.js v4.0.0 -> content/index.js
+console.log("%c Gemini Nexus v4.0.0 Ready ", "background: #333; color: #00ff00; font-size: 16px");
 
 // Initialize Helpers
 const selectionOverlay = new window.GeminiNexusOverlay();
@@ -106,12 +105,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
 // --- Shortcut Configuration ---
 let appShortcuts = {
-    quickAsk: "Ctrl+Q",
-    openPanel: "Ctrl+P"
+    quickAsk: "Ctrl+G",
+    openPanel: "Alt+S"
 };
 
 // Initial Load of Settings
-chrome.storage.local.get(['geminiShortcuts', 'geminiTextSelectionEnabled'], (result) => {
+chrome.storage.local.get(['geminiShortcuts', 'geminiTextSelectionEnabled', 'geminiImageToolsEnabled'], (result) => {
     if (result.geminiShortcuts) {
         appShortcuts = { ...appShortcuts, ...result.geminiShortcuts };
     }
@@ -119,6 +118,12 @@ chrome.storage.local.get(['geminiShortcuts', 'geminiTextSelectionEnabled'], (res
     const selectionEnabled = result.geminiTextSelectionEnabled !== false;
     if (floatingToolbar) {
         floatingToolbar.setSelectionEnabled(selectionEnabled);
+    }
+    
+    // Image Tools
+    const imageToolsEnabled = result.geminiImageToolsEnabled !== false;
+    if (floatingToolbar) {
+        floatingToolbar.setImageToolsEnabled(imageToolsEnabled);
     }
 });
 
@@ -131,6 +136,12 @@ chrome.storage.onChanged.addListener((changes, area) => {
              const enabled = changes.geminiTextSelectionEnabled.newValue !== false;
              if (floatingToolbar) {
                  floatingToolbar.setSelectionEnabled(enabled);
+             }
+        }
+        if (changes.geminiImageToolsEnabled) {
+             const enabled = changes.geminiImageToolsEnabled.newValue !== false;
+             if (floatingToolbar) {
+                 floatingToolbar.setImageToolsEnabled(enabled);
              }
         }
     }

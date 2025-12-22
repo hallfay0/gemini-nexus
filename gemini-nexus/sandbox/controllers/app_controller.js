@@ -1,10 +1,10 @@
 
-// sandbox/app_controller.js
+// sandbox/controllers/app_controller.js
 import { MessageHandler } from './message_handler.js';
-import { SessionFlowController } from './controllers/session_flow.js';
-import { PromptController } from './controllers/prompt.js';
-import { t } from './core/i18n.js';
-import { saveSessionsToStorage, sendToBackground } from '../lib/messaging.js';
+import { SessionFlowController } from './session_flow.js';
+import { PromptController } from './prompt.js';
+import { t } from '../core/i18n.js';
+import { saveSessionsToStorage, sendToBackground } from '../../lib/messaging.js';
 
 export class AppController {
     constructor(sessionManager, uiController, imageManager) {
@@ -14,7 +14,11 @@ export class AppController {
         
         this.captureMode = 'snip'; 
         this.isGenerating = false; 
-        this.pageContextActive = false; 
+        this.pageContextActive = false;
+        this.browserControlActive = false;
+        
+        // Sidebar Restore Behavior: 'auto', 'restore', 'new'
+        this.sidebarRestoreBehavior = 'auto';
 
         // Initialize Message Handler
         this.messageHandler = new MessageHandler(
@@ -49,6 +53,20 @@ export class AppController {
         } else if (enable) {
             this.ui.updateStatus(t('pageContextActive'));
             setTimeout(() => { if(!this.isGenerating) this.ui.updateStatus(""); }, 2000);
+        }
+    }
+
+    toggleBrowserControl() {
+        this.browserControlActive = !this.browserControlActive;
+        const btn = document.getElementById('browser-control-btn');
+        if (btn) {
+            btn.classList.toggle('active', this.browserControlActive);
+        }
+        
+        if (this.browserControlActive) {
+            // Disable page context if browser control is on (optional preference, 
+            // but usually commands don't need full page context context)
+            // For now, keeping them independent.
         }
     }
 
@@ -93,6 +111,13 @@ export class AppController {
 
     async handleIncomingMessage(event) {
         const { action, payload } = event.data;
+        
+        if (action === 'RESTORE_SIDEBAR_BEHAVIOR') {
+            this.sidebarRestoreBehavior = payload;
+            // Update UI settings panel
+            this.ui.settings.updateSidebarBehavior(payload);
+            return;
+        }
 
         // Restore Sessions
         if (action === 'RESTORE_SESSIONS') {
@@ -102,9 +127,29 @@ export class AppController {
             const currentId = this.sessionManager.currentSessionId;
             const currentSessionExists = this.sessionManager.getCurrentSession();
 
+            // If we are initializing (no current session yet), apply the behavior logic
             if (!currentId || !currentSessionExists) {
                  const sorted = this.sessionManager.getSortedSessions();
-                 if (sorted.length > 0) {
+                 
+                 let shouldRestore = false;
+                 
+                 if (this.sidebarRestoreBehavior === 'new') {
+                     shouldRestore = false;
+                 } else if (this.sidebarRestoreBehavior === 'restore') {
+                     shouldRestore = true;
+                 } else {
+                     // 'auto' mode: Restore if last active within 10 minutes
+                     if (sorted.length > 0) {
+                         const lastActive = sorted[0].timestamp;
+                         const now = Date.now();
+                         const tenMinutes = 10 * 60 * 1000;
+                         if (now - lastActive < tenMinutes) {
+                             shouldRestore = true;
+                         }
+                     }
+                 }
+
+                 if (shouldRestore && sorted.length > 0) {
                      this.switchToSession(sorted[0].id);
                  } else {
                      this.handleNewChat();

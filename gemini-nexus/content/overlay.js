@@ -1,5 +1,5 @@
 
-// content/toolbar/overlay.js (formerly content_overlay.js)
+// content/overlay.js
 
 class SelectionOverlay {
     constructor() {

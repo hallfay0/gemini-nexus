@@ -19,64 +19,28 @@
             this.currentResultText = text;
             
             // Delegate rendering to iframe (Offscreen Renderer)
+            // The bridge now handles both Markdown AND Image HTML generation to share logic with Sandbox
             let html = text;
+            let tasks = [];
+
             if (this.bridge) {
                 try {
-                    html = await this.bridge.render(text);
+                    const result = await this.bridge.render(text, isStreaming ? [] : images);
+                    html = result.html;
+                    tasks = result.fetchTasks || [];
                 } catch (e) {
                     console.warn("Bridge render failed, falling back to simple escape");
                     html = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>");
                 }
             }
 
-            // Append Images HTML if present and finished
-            if (!isStreaming && images && images.length > 0) {
-                 const { imageHtml, fetchTasks } = this._generateImagesHtml(images);
-                 html += imageHtml;
+            // Pass to view
+            this.view.showResult(html, title, isStreaming);
                  
-                 // Pass to view
-                 this.view.showResult(html, title, isStreaming);
-                 
-                 // Execute fetch tasks after DOM update
-                 this._executeImageFetchTasks(fetchTasks);
-            } else {
-                 // Pass to view
-                 this.view.showResult(html, title, isStreaming);
+            // Execute fetch tasks (images) if any
+            if (tasks.length > 0) {
+                this._executeImageFetchTasks(tasks);
             }
-        }
-
-        _generateImagesHtml(images) {
-             let html = '<div class="generated-images-grid">';
-             const fetchTasks = [];
-             
-             // Only display the first generated image
-             const displayImages = images.length > 0 ? [images[0]] : [];
-             
-             displayImages.forEach(imgData => {
-                 const reqId = "gen_img_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9);
-                 let targetUrl = imgData.url;
-                 
-                 if (targetUrl) {
-                    // HD Upgrade logic similar to generated_image.js
-                    const parts = targetUrl.split('?');
-                    let base = parts[0];
-                    const query = parts.slice(1).join('?');
-                    const lastSlash = base.lastIndexOf('/');
-                    const lastEquals = base.lastIndexOf('=');
-                    if (lastEquals > lastSlash) {
-                        base = base.substring(0, lastEquals);
-                    }
-                    base += "=s0";
-                    targetUrl = base + (query ? '?' + query : '');
-                 }
-
-                 html += `<img class="generated-image loading" alt="${imgData.alt || 'Generated Image'}" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxIDEiPjwvc3ZnPg==" data-req-id="${reqId}">`;
-                 
-                 fetchTasks.push({ reqId, url: targetUrl });
-             });
-             
-             html += '</div>';
-             return { imageHtml: html, fetchTasks };
         }
         
         _executeImageFetchTasks(tasks) {

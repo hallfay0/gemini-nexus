@@ -8,6 +8,7 @@
     const GrammarManager = window.GeminiUIGrammar;
     const Renderer = window.GeminiUIRenderer;
     const ActionsDelegate = window.GeminiToolbarUIActions;
+    const CodeCopyHandler = window.GeminiCodeCopyHandler;
     
     // Localization helper
     const isZh = navigator.language.startsWith('zh');
@@ -33,6 +34,7 @@
             this.bridge = null; // Renderer Bridge
             this.renderer = null;
             this.actionsDelegate = null;
+            this.codeCopyHandler = null;
         }
 
         setCallbacks(callbacks) {
@@ -51,7 +53,7 @@
             this.view = new View(this.shadow);
             this.grammarManager = new GrammarManager(this.view);
             
-            // Initialize Renderer Bridge (for background markdown rendering)
+            // Initialize Renderer Bridge (for background markdown rendering & image processing)
             this.bridge = new window.GeminiRendererBridge(this.host);
 
             // Initialize Renderer Logic
@@ -59,6 +61,9 @@
             
             // Init Actions Delegate
             this.actionsDelegate = new ActionsDelegate(this);
+
+            // Init Code Copy Handler
+            this.codeCopyHandler = new CodeCopyHandler();
 
             // Init Drag Controller with Docking Logic
             this.dragController = new DragController(
@@ -87,17 +92,15 @@
             this.isBuilt = true;
         }
 
-        // --- Event Handlers (Delegated) ---
-
-        triggerAction(e, action) { this.actionsDelegate.triggerAction(e, action); }
-        cancelAsk(e) { this.actionsDelegate.cancelAsk(e); }
-        stopAsk(e) { this.actionsDelegate.stopAsk(e); }
-        retryAsk(e) { this.actionsDelegate.retryAsk(e); }
-        continueChat(e) { this.actionsDelegate.continueChat(e); }
-        submitAsk(e) { this.actionsDelegate.submitAsk(e); }
-        copyResult(e) { this.actionsDelegate.copyResult(e); }
-        insertResult(e) { this.actionsDelegate.insertResult(e); }
-        replaceResult(e) { this.actionsDelegate.replaceResult(e); }
+        // --- Delegate Accessors ---
+        
+        get actions() {
+            return this.actionsDelegate;
+        }
+        
+        get codeCopy() {
+            return this.codeCopyHandler;
+        }
 
         // --- Other Handlers ---
 
@@ -111,25 +114,6 @@
 
         handleModelChange(model) {
             this.fireCallback('onModelChange', model);
-        }
-
-        handleCodeCopy(e) {
-            const btn = e.target.closest('.copy-code-btn');
-            if (!btn) return;
-            
-            const wrapper = btn.closest('.code-block-wrapper');
-            const codeEl = wrapper.querySelector('code');
-            if (!codeEl) return;
-            
-            const text = codeEl.textContent;
-            navigator.clipboard.writeText(text).then(() => {
-                const originalHtml = btn.innerHTML;
-                // Simple feedback (Icon change)
-                btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4caf50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg><span>Copied</span>`;
-                setTimeout(() => {
-                    btn.innerHTML = originalHtml;
-                }, 2000);
-            }).catch(err => console.error("Failed to copy text:", err));
         }
 
         saveWindowDimensions(w, h) {
@@ -200,6 +184,13 @@
             if (this.renderer) {
                 this.renderer.handleGeneratedImageResult(request);
             }
+        }
+        
+        async processImage(base64) {
+            if (this.bridge) {
+                return this.bridge.processImage(base64);
+            }
+            return base64; // Fallback
         }
 
         showError(text) {

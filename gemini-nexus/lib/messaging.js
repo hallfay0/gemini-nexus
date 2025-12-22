@@ -54,3 +54,32 @@ export function saveTextSelectionToStorage(enabled) {
         payload: enabled
     }, '*');
 }
+
+export function requestImageToolsFromStorage() {
+    window.parent.postMessage({ action: 'GET_IMAGE_TOOLS' }, '*');
+}
+
+export function saveImageToolsToStorage(enabled) {
+    window.parent.postMessage({
+        action: 'SAVE_IMAGE_TOOLS',
+        payload: enabled
+    }, '*');
+}
+
+export function saveSidebarBehaviorToStorage(behavior) {
+    window.parent.postMessage({
+        action: 'SAVE_SIDEBAR_BEHAVIOR',
+        payload: behavior
+    }, '*');
+}
+
+export function requestAccountIndicesFromStorage() {
+    window.parent.postMessage({ action: 'GET_ACCOUNT_INDICES' }, '*');
+}
+
+export function saveAccountIndicesToStorage(indices) {
+    window.parent.postMessage({
+        action: 'SAVE_ACCOUNT_INDICES',
+        payload: indices
+    }, '*');
+}

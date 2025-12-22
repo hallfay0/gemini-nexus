@@ -32,3 +32,27 @@ export async function dataUrlToBlob(dataUrl) {
         throw new Error("Failed to convert data URL to Blob: " + e.message);
     }
 }
+
+// Upgrade Google Image URL to High Res (Original Quality)
+export function getHighResImageUrl(url) {
+    if (!url) return null;
+    
+    // Robustly replace or append size parameter
+    const parts = url.split('?');
+    let base = parts[0];
+    const query = parts.slice(1).join('?');
+
+    // Check for existing parameters in the path (e.g. =s1024, =w500)
+    const lastSlash = base.lastIndexOf('/');
+    const lastEquals = base.lastIndexOf('=');
+
+    if (lastEquals > lastSlash) {
+        // Strip existing parameter
+        base = base.substring(0, lastEquals);
+    }
+
+    // Append high-res parameter (=s0)
+    base += "=s0";
+
+    return base + (query ? '?' + query : '');
+}

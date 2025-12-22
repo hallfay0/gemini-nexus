@@ -1,6 +1,6 @@
 
-// background/history.js
-import { generateUUID } from '../lib/utils.js';
+// background/managers/history_manager.js
+import { generateUUID } from '../../lib/utils.js';
 
 /**
  * Saves a completed interaction to the chat history in local storage.
@@ -101,6 +101,48 @@ export async function appendAiMessage(sessionId, result) {
         return false;
     } catch (e) {
         console.error("Error appending history:", e);
+        return false;
+    }
+}
+
+/**
+ * Appends a User message (or Tool Output) to an existing session.
+ * Used for the automated browser control loop.
+ * @param {string} sessionId 
+ * @param {string} text 
+ * @param {Array} images - Optional array of base64 image strings
+ */
+export async function appendUserMessage(sessionId, text, images = null) {
+    try {
+        const { geminiSessions = [] } = await chrome.storage.local.get(['geminiSessions']);
+        const sessionIndex = geminiSessions.findIndex(s => s.id === sessionId);
+        
+        if (sessionIndex !== -1) {
+            const session = geminiSessions[sessionIndex];
+            
+            session.messages.push({
+                role: 'user',
+                text: text,
+                image: images // Store image array if present
+            });
+            session.timestamp = Date.now();
+            
+            // Move to top
+            geminiSessions.splice(sessionIndex, 1);
+            geminiSessions.unshift(session);
+            
+            await chrome.storage.local.set({ geminiSessions });
+            
+            chrome.runtime.sendMessage({ 
+                action: "SESSIONS_UPDATED", 
+                sessions: geminiSessions 
+            }).catch(() => {});
+            
+            return true;
+        }
+        return false;
+    } catch (e) {
+        console.error("Error appending user message:", e);
         return false;
     }
 }

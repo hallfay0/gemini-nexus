@@ -1,5 +1,5 @@
 
-// sandbox/ui/controller.js
+// sandbox/ui/ui_controller.js
 import { ChatController } from './chat.js';
 import { SidebarController } from './sidebar.js';
 import { SettingsController } from './settings.js';

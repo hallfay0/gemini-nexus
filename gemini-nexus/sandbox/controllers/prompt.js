@@ -71,6 +71,7 @@ export class PromptController {
             files: files, // Send full file objects array
             model: selectedModel,
             includePageContext: this.app.pageContextActive,
+            enableBrowserControl: this.app.browserControlActive, // Pass browser control state
             sessionId: currentId // Important: Pass session ID so background can save history independently
         });
     }

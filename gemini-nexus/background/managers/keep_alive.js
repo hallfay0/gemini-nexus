@@ -1,5 +1,5 @@
 
-// services/keep_alive.js
+// background/managers/keep_alive.js
 
 const ALARM_NAME = 'gemini_cookie_rotate';
 const ROTATE_URL = "https://accounts.google.com/RotateCookies";

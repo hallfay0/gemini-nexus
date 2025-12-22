@@ -63,6 +63,7 @@
                 case 'image_remove_bg':
                 case 'image_remove_text':
                 case 'image_upscale':
+                case 'image_expand':
                     {
                         const img = this.imageDetector.getCurrentImage();
                         if (!img) return;
@@ -76,6 +77,7 @@
                         let mode = 'remove_text';
                         if (actionType === 'image_upscale') mode = 'upscale';
                         if (actionType === 'image_remove_bg') mode = 'remove_bg';
+                        if (actionType === 'image_expand') mode = 'expand';
 
                         this.actions.handleImagePrompt(imgUrl, rect, mode, currentModel);
                     }

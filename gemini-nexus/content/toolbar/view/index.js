@@ -68,7 +68,8 @@
                     // Image Edit Buttons
                     imageRemoveBg: get('btn-image-remove-bg'),
                     imageRemoveText: get('btn-image-remove-text'),
-                    imageUpscale: get('btn-image-upscale')
+                    imageUpscale: get('btn-image-upscale'),
+                    imageExpand: get('btn-image-expand')
                 }
             };
         }

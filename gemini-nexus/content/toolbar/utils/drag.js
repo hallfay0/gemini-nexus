@@ -1,5 +1,5 @@
 
-// content/toolbar/drag.js
+// content/toolbar/utils/drag.js
 (function() {
     /**
      * Module: Drag Behavior

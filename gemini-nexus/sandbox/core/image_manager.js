@@ -29,12 +29,58 @@ export class ImageManager {
 
         // Paste Support
         document.addEventListener('paste', (e) => {
-            const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+            const clipboardData = e.clipboardData || e.originalEvent.clipboardData;
+            const items = clipboardData.items;
+            const html = clipboardData.getData('text/html');
+            const text = clipboardData.getData('text/plain');
+
+            let handledFiles = false;
+            let handledHtmlImages = false;
+
+            // 1. Check for Files (e.g. Screenshots, File Copy, Word Images)
             for (const item of items) {
                 if (item.kind === 'file') {
-                    e.preventDefault();
                     const file = item.getAsFile();
-                    this.handleFile(file);
+                    if (file) {
+                        this.handleFile(file);
+                        handledFiles = true;
+                    }
+                }
+            }
+
+            // 2. Check for HTML Images (e.g. Webpage Copy)
+            // Only if no files were found directly (to avoid duplicates for apps that provide both)
+            if (!handledFiles && html) {
+                const doc = new DOMParser().parseFromString(html, 'text/html');
+                const images = doc.querySelectorAll('img');
+                
+                images.forEach(img => {
+                    const src = img.src;
+                    if (!src) return;
+
+                    if (src.startsWith('data:')) {
+                        // Direct Base64
+                        const match = src.match(/^data:(.+);base64,(.+)$/);
+                        if (match) {
+                            this.addFile(src, match[1], 'pasted_image.png');
+                            handledHtmlImages = true;
+                        }
+                    } else if (src.startsWith('http')) {
+                        // Remote URL
+                        if (this.onUrlDrop) {
+                            this.onUrlDrop(src);
+                            handledHtmlImages = true;
+                        }
+                    }
+                });
+            }
+
+            // 3. If we intercepted images, we must manually handle the text insertion
+            // to prevent the default paste (which might insert double text or lose the text if we preventDefault globally)
+            if (handledFiles || handledHtmlImages) {
+                e.preventDefault();
+                if (text) {
+                    this._insertTextAtCursor(text);
                 }
             }
         });
@@ -66,61 +112,84 @@ export class ImageManager {
             dragCounter = 0;
             this.inputWrapper.classList.remove('dragging');
 
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            const html = dt.getData('text/html');
+            const text = dt.getData('text/plain');
+
+            let handledFiles = false;
+            let handledHtmlImages = false;
+
             // 1. Files (System Drag)
-            const files = e.dataTransfer.files;
             if (files && files.length > 0) {
                 Array.from(files).forEach(file => this.handleFile(file));
-                return;
+                handledFiles = true;
             }
 
-            // 2. Web Content (URL/Image Drag)
-            if (this.onUrlDrop) {
-                const url = this._extractUrl(e.dataTransfer);
-                if (url) this.onUrlDrop(url);
+            // 2. Web Content (Images in HTML)
+            if (!handledFiles && html) {
+                const doc = new DOMParser().parseFromString(html, 'text/html');
+                const images = doc.querySelectorAll('img');
+                
+                images.forEach(img => {
+                    const src = img.src;
+                    if (!src) return;
+
+                    // Filter out likely spacers or tracking pixels
+                    if (img.width > 0 && img.width < 50 && img.height > 0 && img.height < 50) return;
+
+                    if (src.startsWith('data:')) {
+                        const match = src.match(/^data:(.+);base64,(.+)$/);
+                        if (match) {
+                            this.addFile(src, match[1], 'dragged_image.png');
+                            handledHtmlImages = true;
+                        }
+                    } else if (src.startsWith('http')) {
+                        if (this.onUrlDrop) {
+                            this.onUrlDrop(src);
+                            handledHtmlImages = true;
+                        }
+                    }
+                });
+            }
+
+            // 3. Text Insertion (Mixed Content)
+            if (text) {
+                // If we handled images, avoid inserting text if it looks like the URL of the image we just added
+                // (Browsers often provide the image URL as text/plain when dragging an image)
+                let skipText = false;
+                if (handledHtmlImages || handledFiles) {
+                    if (text.match(/^https?:\/\//) || text.startsWith('data:')) {
+                        skipText = true; 
+                    }
+                }
+                
+                if (!skipText) {
+                    this._insertTextAtCursor(text);
+                }
             }
         });
     }
 
-    _extractUrl(dt) {
-        // 1. Try HTML first (Extract <img> src)
-        // This is the most reliable way for images dragged from web pages,
-        // as it avoids getting the link URL if the image is wrapped in an anchor tag.
-        const html = dt.getData('text/html');
-        if (html) {
-            try {
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(html, 'text/html');
-                const img = doc.querySelector('img');
-                // Ensure we got an image and the src is absolute (http) or data URI
-                // to avoid issues with relative paths in sandbox context.
-                if (img && img.src && (img.src.startsWith('http') || img.src.startsWith('data:'))) {
-                    return img.src;
-                }
-            } catch (e) {
-                // Ignore parse errors
-            }
-        }
+    _insertTextAtCursor(text) {
+        const input = this.inputFn;
+        if (!input) return;
 
-        // 2. Try URI List (Standard for links)
-        const uriList = dt.getData('text/uri-list');
-        if (uriList) {
-            const lines = uriList.split(/[\r\n]+/);
-            for (const line of lines) {
-                const clean = line.trim();
-                if (clean && !clean.startsWith('#')) return clean;
-            }
+        if (input.selectionStart || input.selectionStart === 0) {
+            const startPos = input.selectionStart;
+            const endPos = input.selectionEnd;
+            input.value = input.value.substring(0, startPos)
+                + text
+                + input.value.substring(endPos, input.value.length);
+            
+            input.selectionStart = startPos + text.length;
+            input.selectionEnd = startPos + text.length;
+        } else {
+            input.value += text;
         }
-
-        // 3. Fallback to Plain Text (if URL-like)
-        const text = dt.getData('text/plain');
-        if (text) {
-            const clean = text.trim();
-            if (clean.match(/^https?:\/\//) || clean.startsWith('data:image')) {
-                return clean;
-            }
-        }
-        
-        return null;
+        // Trigger resize/input event
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.focus();
     }
 
     handleFile(file) {

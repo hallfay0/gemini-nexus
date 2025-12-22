@@ -18,6 +18,14 @@ export default defineConfig(({ mode }) => {
         alias: {
           '@': path.resolve(__dirname, '.'),
         }
+      },
+      build: {
+        rollupOptions: {
+          input: {
+            sidepanel: path.resolve(__dirname, 'sidepanel/index.html'),
+            sandbox: path.resolve(__dirname, 'sandbox/index.html')
+          }
+        }
       }
     };
 });

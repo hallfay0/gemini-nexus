@@ -3,6 +3,8 @@
 
 
 
+
+
 .footer {
     position: fixed;
     bottom: 0;
@@ -86,38 +88,44 @@ body.layout-wide .tools-container {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    width: 28px;
-    height: 28px;
+    width: 26px;
+    height: 26px;
     border-radius: 50%;
-    background: var(--bg-sidebar);
-    backdrop-filter: blur(8px);
+    background: var(--bg-body);
     border: 1px solid var(--border-color);
     color: var(--text-secondary);
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    z-index: 5;
+    z-index: 10;
     opacity: 0;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateY(-50%) scale(0.9);
+    transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
     pointer-events: none;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
 .tools-container:hover .scroll-nav-btn {
     opacity: 1;
+    transform: translateY(-50%) scale(1);
     pointer-events: auto;
 }
 
 .scroll-nav-btn:hover {
     background: var(--primary);
-    color: white;
+    color: var(--on-primary);
     border-color: var(--primary);
-    transform: translateY(-50%) scale(1.1);
+    box-shadow: 0 4px 12px rgba(11, 87, 208, 0.25);
 }
 
-.scroll-nav-btn.left { left: -14px; }
-.scroll-nav-btn.right { right: -14px; }
+/* Ensure scaling works on hover with enough specificity */
+.tools-container .scroll-nav-btn:hover {
+    transform: translateY(-50%) scale(1.15);
+}
+
+.scroll-nav-btn.left { left: -10px; }
+.scroll-nav-btn.right { right: -10px; }
 
 .tools-row {
     display: flex;

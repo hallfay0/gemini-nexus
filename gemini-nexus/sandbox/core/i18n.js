@@ -1,4 +1,5 @@
 
+
 // sandbox/core/i18n.js
 
 export const translations = {
@@ -10,6 +11,7 @@ export const translations = {
         "chatHistory": "Chat History",
         "newChat": "New Chat",
         "pageContext": "Page",
+        "browserControl": "Browser Control",
         "quote": "Quote",
         "ocr": "OCR",
         "snip": "Snip",
@@ -22,6 +24,15 @@ export const translations = {
         "general": "General",
         "textSelection": "Text Selection Toolbar",
         "textSelectionDesc": "Show floating toolbar when selecting text.",
+        "imageToolsToggle": "Show Image Tools Button",
+        "imageToolsToggleDesc": "Show the AI button when hovering over images.",
+        "sidebarBehavior": "When Sidebar Reopens",
+        "sidebarBehaviorAuto": "Auto restore or restart",
+        "sidebarBehaviorAutoDesc": "Restore if opened within 10 mins, otherwise start new chat.",
+        "sidebarBehaviorRestore": "Always restore previous chat",
+        "sidebarBehaviorNew": "Always start new chat",
+        "accountIndices": "Account Indices (Multi-account)",
+        "accountIndicesDesc": "Comma-separated user indices (e.g., 0, 1, 2) for polling.",
         "appearance": "Appearance",
         "theme": "Theme",
         "language": "Language",
@@ -30,10 +41,13 @@ export const translations = {
         "quickAsk": "Quick Ask (Floating)",
         "openSidePanel": "Open Side Panel",
         "openExtension": "Open Extension",
+        "shortcutFocusInput": "Focus Input",
+        "shortcutSwitchModel": "Switch Model (in Input)",
         "resetDefault": "Reset Default",
         "saveChanges": "Save Changes",
         "about": "About",
         "sourceCode": "Source Code",
+        "buyMeCoffee": "Buy Me a Coffee",
         "system": "System Default",
         "light": "Light",
         "dark": "Dark",
@@ -59,6 +73,7 @@ export const translations = {
         "toggleHistory": "Chat History",
         "newChatTooltip": "New Chat",
         "pageContextTooltip": "Toggle chat with page content",
+        "browserControlTooltip": "Allow model to control the browser",
         "quoteTooltip": "Quote selected text from page",
         "ocrTooltip": "Capture area and extract text",
         "screenshotTranslateTooltip": "Capture area and translate text",
@@ -71,7 +86,8 @@ export const translations = {
         "downloadImage": "Download Image",
         "close": "Close",
         "sendMessageTooltip": "Send message",
-        "openFullPageTooltip": "Open in full page"
+        "openFullPageTooltip": "Open in full page",
+        "modelSelectTooltip": "Select Model (Tab to cycle)"
     },
     zh: {
         "searchPlaceholder": "搜索对话",
@@ -81,6 +97,7 @@ export const translations = {
         "chatHistory": "历史记录",
         "newChat": "新对话",
         "pageContext": "网页",
+        "browserControl": "浏览器控制",
         "quote": "引用",
         "ocr": "OCR",
         "snip": "截图",
@@ -93,6 +110,15 @@ export const translations = {
         "general": "常规",
         "textSelection": "划词工具栏",
         "textSelectionDesc": "选中网页文本时显示悬浮工具栏。",
+        "imageToolsToggle": "显示图片工具按钮",
+        "imageToolsToggleDesc": "鼠标悬停在图片上时显示 AI 按钮。",
+        "sidebarBehavior": "当侧边栏重新打开时",
+        "sidebarBehaviorAuto": "自动恢复或重新开始",
+        "sidebarBehaviorAutoDesc": "如果在10分钟内重新打开，聊天将恢复；如果超过10分钟，将开始新的聊天",
+        "sidebarBehaviorRestore": "始终恢复上次的聊天",
+        "sidebarBehaviorNew": "始终开始新的聊天",
+        "accountIndices": "多账号轮询 (Account Indices)",
+        "accountIndicesDesc": "输入逗号分隔的账号索引值 (如 0, 1, 7) 以开启轮询。",
         "appearance": "外观",
         "theme": "主题",
         "language": "语言",
@@ -101,10 +127,13 @@ export const translations = {
         "quickAsk": "快速提问 (悬浮)",
         "openSidePanel": "打开侧边栏",
         "openExtension": "打开扩展",
+        "shortcutFocusInput": "聚焦输入框",
+        "shortcutSwitchModel": "切换模型 (输入框内)",
         "resetDefault": "恢复默认",
         "saveChanges": "保存更改",
         "about": "关于",
         "sourceCode": "源代码",
+        "buyMeCoffee": "请我喝咖啡",
         "system": "跟随系统",
         "light": "浅色",
         "dark": "深色",
@@ -130,6 +159,7 @@ export const translations = {
         "toggleHistory": "历史记录",
         "newChatTooltip": "新对话",
         "pageContextTooltip": "切换网页上下文对话",
+        "browserControlTooltip": "允许模型控制浏览器",
         "quoteTooltip": "引用网页选中内容",
         "ocrTooltip": "区域截图 (OCR文字提取)",
         "screenshotTranslateTooltip": "截取区域并翻译文字",
@@ -142,7 +172,8 @@ export const translations = {
         "downloadImage": "下载图片",
         "close": "关闭",
         "sendMessageTooltip": "发送消息",
-        "openFullPageTooltip": "新标签页打开"
+        "openFullPageTooltip": "新标签页打开",
+        "modelSelectTooltip": "选择模型 (按 Tab 切换)"
     }
 };
 

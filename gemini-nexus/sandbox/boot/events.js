@@ -1,3 +1,4 @@
+
 // sandbox/boot/events.js
 import { sendToBackground } from '../../lib/messaging.js';
 import { t } from '../core/i18n.js';
@@ -29,6 +30,15 @@ export function bindAppEvents(app, ui, setResizeRef) {
     }
 
     // Tools
+    
+    // Browser Control (Functional Toggle)
+    const browserControlBtn = document.getElementById('browser-control-btn');
+    if (browserControlBtn) {
+        browserControlBtn.addEventListener('click', () => {
+            app.toggleBrowserControl();
+        });
+    }
+
     document.getElementById('quote-btn').addEventListener('click', () => {
         sendToBackground({ action: "GET_ACTIVE_SELECTION" });
     });
@@ -95,6 +105,18 @@ export function bindAppEvents(app, ui, setResizeRef) {
 
     if (inputFn && sendBtn) {
         inputFn.addEventListener('keydown', (e) => {
+            // Tab Cycle Models
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                if (modelSelect) {
+                    const direction = e.shiftKey ? -1 : 1;
+                    const newIndex = (modelSelect.selectedIndex + direction + modelSelect.length) % modelSelect.length;
+                    modelSelect.selectedIndex = newIndex;
+                    modelSelect.dispatchEvent(new Event('change'));
+                }
+                return;
+            }
+
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
                 sendBtn.click();

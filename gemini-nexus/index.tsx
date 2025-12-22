@@ -1,0 +1,1 @@
+// This file is unused. The application logic resides in content/, background/, and sandbox/ directories.

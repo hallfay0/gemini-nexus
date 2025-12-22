@@ -1,3 +1,4 @@
+
 export const SidebarTemplate = `
     <!-- SIDEBAR -->
     <div id="history-sidebar" class="sidebar">

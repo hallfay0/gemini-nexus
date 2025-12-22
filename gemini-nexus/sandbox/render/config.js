@@ -6,16 +6,39 @@ export function configureMarkdown() {
 
     const renderer = new marked.Renderer();
     
-    renderer.code = function(code, language) {
-        const validLang = (language && hljs.getLanguage(language)) ? language : 'plaintext';
-        let highlighted = code;
+    // Helper to escape HTML safely (used when syntax highlighting fails or for plaintext)
+    const escapeHtml = (text) => {
+        return text
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    };
+
+    renderer.code = function(codeOrToken, language) {
+        let code = codeOrToken;
+        let lang = language;
+
+        // Handle Marked v13+ breaking change: renderer receives a token object as first argument
+        if (typeof codeOrToken === 'object' && codeOrToken !== null) {
+            code = codeOrToken.text || '';
+            lang = codeOrToken.lang || '';
+        }
+
+        const validLang = (lang && typeof hljs !== 'undefined' && hljs.getLanguage(lang)) ? lang : 'plaintext';
+        let highlighted;
         
-        if (typeof hljs !== 'undefined') {
+        if (typeof hljs !== 'undefined' && validLang !== 'plaintext') {
             try {
                 highlighted = hljs.highlight(code, { language: validLang }).value;
             } catch (e) {
-                // Fallback
+                // Fallback to manual escape if highlight fails
+                highlighted = escapeHtml(code);
             }
+        } else {
+            // Manual escape for plaintext or if hljs is missing
+            highlighted = escapeHtml(code);
         }
 
         return `
@@ -31,9 +54,16 @@ export function configureMarkdown() {
 </div>`;
     };
 
-    marked.setOptions({ 
+    const options = { 
         breaks: true, 
         gfm: true,
         renderer: renderer
-    });
+    };
+
+    // Use marked.use() if available (v5+), otherwise fallback to setOptions (deprecated)
+    if (typeof marked.use === 'function') {
+        marked.use(options);
+    } else if (typeof marked.setOptions === 'function') {
+        marked.setOptions(options);
+    }
 }

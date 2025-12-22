@@ -1,5 +1,5 @@
 
-// content/toolbar/selection.js
+// content/selection.js
 
 (function() {
     class SelectionObserver {

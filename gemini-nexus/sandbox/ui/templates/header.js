@@ -8,7 +8,7 @@ export const HeaderTemplate = `
             </button>
             
             <div class="model-select-wrapper">
-                <select id="model-select">
+                <select id="model-select" data-i18n-title="modelSelectTooltip" title="Select Model (Tab to cycle)">
                     <option value="gemini-2.5-flash">Fast</option>
                     <option value="gemini-2.5-pro">Thinking</option>
                     <option value="gemini-3.0-pro">3 Pro</option>

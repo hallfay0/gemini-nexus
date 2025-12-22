@@ -1,4 +1,6 @@
 
+
+
 // content/toolbar/controller.js
 
 (function() {
@@ -79,6 +81,10 @@
             }
         }
 
+        setImageToolsEnabled(enabled) {
+            this.imageDetector.setEnabled(enabled);
+        }
+
         /**
          * 处理来自右键菜单的动作指令
          */
@@ -135,8 +141,10 @@
         }
 
         handleGeneratedImageResult(request) {
-            if (request.base64 && window.GeminiWatermarkRemover) {
-                 window.GeminiWatermarkRemover.process(request.base64).then(cleaned => {
+            if (request.base64 && this.ui) {
+                 // Delegate to the bridge in UI Manager to process image (remove watermark)
+                 // This reuses the logic loaded in the sandbox iframe
+                 this.ui.processImage(request.base64).then(cleaned => {
                      // Pass cleaned image to UI
                      this.ui.handleGeneratedImageResult({ ...request, base64: cleaned });
                  }).catch(e => {

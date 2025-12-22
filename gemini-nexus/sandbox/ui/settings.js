@@ -1,217 +1,152 @@
 
 // sandbox/ui/settings.js
-import { saveShortcutsToStorage, saveThemeToStorage, requestThemeFromStorage, saveLanguageToStorage, requestLanguageFromStorage, saveTextSelectionToStorage, requestTextSelectionFromStorage } from '../../lib/messaging.js';
+import { saveShortcutsToStorage, saveThemeToStorage, requestThemeFromStorage, saveLanguageToStorage, requestLanguageFromStorage, saveTextSelectionToStorage, requestTextSelectionFromStorage, saveSidebarBehaviorToStorage, saveImageToolsToStorage, requestImageToolsFromStorage, saveAccountIndicesToStorage, requestAccountIndicesFromStorage } from '../../lib/messaging.js';
 import { setLanguagePreference, getLanguagePreference } from '../core/i18n.js';
+import { SettingsView } from './settings/view.js';
 
 export class SettingsController {
     constructor(callbacks) {
         this.callbacks = callbacks || {};
         
-        this.shortcuts = {
-            quickAsk: "Ctrl+Q",
-            openPanel: "Ctrl+P"
-        };
+        // State
+        this.shortcuts = { quickAsk: "Ctrl+G", openPanel: "Alt+S" };
         this.defaultShortcuts = { ...this.shortcuts };
         this.textSelectionEnabled = true;
+        this.imageToolsEnabled = true;
+        this.accountIndices = "0";
 
-        this.queryElements();
-        this.initListeners();
-    }
-
-    queryElements() {
-        this.modal = document.getElementById('settings-modal');
-        this.btnOpen = document.getElementById('settings-btn'); // External trigger
-        this.btnClose = document.getElementById('close-settings');
-        this.themeSelect = document.getElementById('theme-select');
-        this.languageSelect = document.getElementById('language-select');
-        this.inputQuickAsk = document.getElementById('shortcut-quick-ask');
-        this.inputOpenPanel = document.getElementById('shortcut-open-panel');
-        this.btnSave = document.getElementById('save-shortcuts');
-        this.btnReset = document.getElementById('reset-shortcuts');
-        this.textSelectionToggle = document.getElementById('text-selection-toggle');
-    }
-
-    initListeners() {
-        // Modal Visibility
-        if (this.btnOpen) {
-            this.btnOpen.addEventListener('click', () => {
+        // Initialize View
+        this.view = new SettingsView({
+            onOpen: () => this.handleOpen(),
+            onSave: (data) => this.saveSettings(data),
+            onReset: () => this.resetSettings(),
+            
+            onThemeChange: (theme) => this.setTheme(theme),
+            onLanguageChange: (lang) => this.setLanguage(lang),
+            
+            onTextSelectionChange: (val) => { this.textSelectionEnabled = (val === 'on' || val === true); saveTextSelectionToStorage(this.textSelectionEnabled); },
+            onImageToolsChange: (val) => { this.imageToolsEnabled = (val === 'on' || val === true); saveImageToolsToStorage(this.imageToolsEnabled); },
+            onSidebarBehaviorChange: (val) => saveSidebarBehaviorToStorage(val)
+        });
+        
+        // External Trigger Binding
+        const trigger = document.getElementById('settings-btn');
+        if(trigger) {
+            trigger.addEventListener('click', () => {
                 this.open();
                 if (this.callbacks.onOpen) this.callbacks.onOpen();
             });
         }
-        
-        if (this.btnClose) {
-            this.btnClose.addEventListener('click', () => this.close());
-        }
-
-        if (this.modal) {
-            this.modal.addEventListener('click', (e) => {
-                if (e.target === this.modal) {
-                    this.close();
-                }
-            });
-        }
-
-        // Theme
-        if (this.themeSelect) {
-            this.themeSelect.addEventListener('change', (e) => {
-                this.setTheme(e.target.value);
-            });
-        }
-        
-        // System Theme Listener (Real-time update)
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-             if (this.themeSelect && this.themeSelect.value === 'system') {
-                 this._applyVisualTheme('system');
-             }
-        });
-
-        // Language
-        if (this.languageSelect) {
-            this.languageSelect.addEventListener('change', (e) => {
-                const newLang = e.target.value;
-                setLanguagePreference(newLang);
-                saveLanguageToStorage(newLang);
-                // Dispatch event to update UI immediately
-                document.dispatchEvent(new CustomEvent('gemini-language-changed'));
-            });
-        }
-        
-        // Text Selection Toggle
-        if (this.textSelectionToggle) {
-            this.textSelectionToggle.addEventListener('change', (e) => {
-                this.textSelectionEnabled = e.target.checked;
-                saveTextSelectionToStorage(this.textSelectionEnabled);
-            });
-        }
-
-        // Shortcuts
-        this.setupShortcutInput(this.inputQuickAsk);
-        this.setupShortcutInput(this.inputOpenPanel);
-
-        if (this.btnSave) {
-            this.btnSave.addEventListener('click', () => {
-                this.shortcuts.quickAsk = this.inputQuickAsk.value;
-                this.shortcuts.openPanel = this.inputOpenPanel.value;
-                saveShortcutsToStorage(this.shortcuts);
-                this.close();
-            });
-        }
-
-        if (this.btnReset) {
-            this.btnReset.addEventListener('click', () => {
-                this.inputQuickAsk.value = this.defaultShortcuts.quickAsk;
-                this.inputOpenPanel.value = this.defaultShortcuts.openPanel;
-            });
-        }
-
-        // Escape Key for Settings
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && this.modal && this.modal.classList.contains('visible')) {
-                this.close();
-            }
-        });
     }
 
     open() {
-        if (this.modal) {
-            this.modal.classList.add('visible');
-            this.fetchGithubStars();
-            // Sync inputs
-            if(this.inputQuickAsk) this.inputQuickAsk.value = this.shortcuts.quickAsk;
-            if(this.inputOpenPanel) this.inputOpenPanel.value = this.shortcuts.openPanel;
-            if(this.languageSelect) this.languageSelect.value = getLanguagePreference();
-            
-            // Fetch current settings
-            requestTextSelectionFromStorage();
-        }
+        this.view.open();
     }
 
     close() {
-        if (this.modal) {
-            this.modal.classList.remove('visible');
-        }
+        this.view.close();
     }
 
+    handleOpen() {
+        // Sync state to view
+        this.view.setShortcuts(this.shortcuts);
+        this.view.setLanguageValue(getLanguagePreference());
+        this.view.setToggles(this.textSelectionEnabled, this.imageToolsEnabled);
+        this.view.setAccountIndices(this.accountIndices);
+        
+        // Refresh from storage
+        requestTextSelectionFromStorage();
+        requestImageToolsFromStorage();
+        requestAccountIndicesFromStorage();
+        
+        this.fetchGithubStars();
+    }
+
+    saveSettings(data) {
+        // Shortcuts
+        this.shortcuts = data.shortcuts;
+        saveShortcutsToStorage(this.shortcuts);
+        
+        // General Toggles
+        this.textSelectionEnabled = data.textSelection;
+        saveTextSelectionToStorage(this.textSelectionEnabled);
+        
+        this.imageToolsEnabled = data.imageTools;
+        saveImageToolsToStorage(this.imageToolsEnabled);
+        
+        // Accounts
+        let val = data.accountIndices.trim();
+        if (!val) val = "0";
+        this.accountIndices = val;
+        const cleaned = val.replace(/[^0-9,]/g, '');
+        saveAccountIndicesToStorage(cleaned);
+    }
+
+    resetSettings() {
+        this.view.setShortcuts(this.defaultShortcuts);
+        this.view.setAccountIndices("0");
+    }
+
+    // --- State Updates (From View or Storage) ---
+
     setTheme(theme) {
-        this._applyVisualTheme(theme);
+        this.view.applyVisualTheme(theme);
         saveThemeToStorage(theme);
     }
     
     updateTheme(theme) {
-        this._applyVisualTheme(theme);
-        if(this.themeSelect) this.themeSelect.value = theme;
+        this.view.setThemeValue(theme);
     }
     
-    _applyVisualTheme(theme) {
-        let applied = theme;
-        if (theme === 'system') {
-             applied = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-        }
-        document.documentElement.setAttribute('data-theme', applied);
+    setLanguage(newLang) {
+        setLanguagePreference(newLang);
+        saveLanguageToStorage(newLang);
+        document.dispatchEvent(new CustomEvent('gemini-language-changed'));
     }
     
     updateLanguage(lang) {
         setLanguagePreference(lang);
-        if(this.languageSelect) this.languageSelect.value = lang;
-        // Trigger UI update from controller
+        this.view.setLanguageValue(lang);
         document.dispatchEvent(new CustomEvent('gemini-language-changed'));
     }
 
     updateShortcuts(payload) {
         if (payload) {
             this.shortcuts = { ...this.defaultShortcuts, ...payload };
-            if(this.inputQuickAsk) this.inputQuickAsk.value = this.shortcuts.quickAsk;
-            if(this.inputOpenPanel) this.inputOpenPanel.value = this.shortcuts.openPanel;
+            this.view.setShortcuts(this.shortcuts);
         }
     }
     
     updateTextSelection(enabled) {
         this.textSelectionEnabled = enabled;
-        if (this.textSelectionToggle) {
-            this.textSelectionToggle.checked = enabled;
-        }
+        this.view.setToggles(this.textSelectionEnabled, this.imageToolsEnabled);
     }
 
-    setupShortcutInput(inputEl) {
-        if (!inputEl) return;
-        inputEl.addEventListener('keydown', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
+    updateImageTools(enabled) {
+        this.imageToolsEnabled = enabled;
+        this.view.setToggles(this.textSelectionEnabled, this.imageToolsEnabled);
+    }
+    
+    updateSidebarBehavior(behavior) {
+        this.view.setSidebarBehavior(behavior);
+    }
 
-            if (['Control', 'Alt', 'Shift', 'Meta'].includes(e.key)) return;
-            
-            const keys = [];
-            if (e.ctrlKey) keys.push('Ctrl');
-            if (e.altKey) keys.push('Alt');
-            if (e.shiftKey) keys.push('Shift');
-            if (e.metaKey) keys.push('Meta');
-            
-            let k = e.key.toUpperCase();
-            if (k === ' ') k = 'Space';
-            keys.push(k);
-
-            inputEl.value = keys.join('+');
-        });
+    updateAccountIndices(indicesString) {
+        this.accountIndices = indicesString || "0";
+        this.view.setAccountIndices(this.accountIndices);
     }
 
     async fetchGithubStars() {
-        const starEl = document.getElementById('star-count');
-        if (!starEl || starEl.dataset.fetched) return; 
+        if (this.view.hasFetchedStars()) return; 
 
         try {
             const res = await fetch('https://api.github.com/repos/yeahhe365/gemini-nexus');
             if (res.ok) {
                 const data = await res.json();
-                const count = data.stargazers_count;
-                const formatted = count > 999 ? (count/1000).toFixed(1) + 'k' : count;
-                starEl.textContent = `★ ${formatted}`;
-                starEl.style.display = 'inline-flex';
-                starEl.dataset.fetched = "true";
+                this.view.displayStars(data.stargazers_count);
             }
         } catch (e) {
-            console.log("Failed to fetch GitHub stars", e);
-            starEl.style.display = 'none';
+            this.view.displayStars(null);
         }
     }
 }

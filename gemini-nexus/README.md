@@ -1,19 +1,35 @@
 <div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+  <h1>Gemini Nexus</h1>
+  <p>A powerful AI assistant Chrome Extension powered by Google Gemini.</p>
 </div>
 
-# Run and deploy your AI Studio app
+## Overview
 
-This contains everything you need to run your app locally.
+Gemini Nexus integrates Google's Gemini models directly into your browsing experience. It features a side panel for chat, a floating toolbar for quick actions, and image analysis capabilities.
 
-View your app in AI Studio: https://ai.studio/apps/drive/1m6L1zx1_ZGOwoUQPCmV9Sf7_rgpLwYpC
+## Architecture
+
+*   **Side Panel**: The main chat interface (`sidepanel/`).
+*   **Sandbox**: Secure iframe environment for rendering Markdown and handling logic (`sandbox/`).
+*   **Content Scripts**: Floating toolbar and page interaction (`content/`).
+*   **Background**: Service worker handling API calls and session management (`background/`).
 
 ## Run Locally
 
-**Prerequisites:**  Node.js
+**Prerequisites:** Node.js
 
+1.  Install dependencies:
+    ```bash
+    npm install
+    ```
 
-1. Install dependencies:
-   `npm install`
-2. Run the app:
-   `npm run dev`
+2.  Build the extension:
+    ```bash
+    npm run build
+    ```
+
+3.  Load into Chrome:
+    *   Open `chrome://extensions/`
+    *   Enable "Developer mode"
+    *   Click "Load unpacked"
+    *   Select the `dist` folder (or root if running in dev mode without bundling).
